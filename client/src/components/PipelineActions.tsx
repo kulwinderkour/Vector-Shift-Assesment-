@@ -48,10 +48,17 @@ export const PipelineActions = () => {
         userId: 1 // Demo user ID
       };
 
-      await apiRequest('/api/pipelines', {
+      const response = await fetch('/api/pipelines', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(pipelineData),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to save pipeline');
+      }
 
       toast({
         title: "Pipeline saved successfully",
@@ -189,14 +196,23 @@ export const PipelineActions = () => {
         }))
       };
 
-      const response = await apiRequest('/api/pipelines/parse', {
+      const response = await fetch('/api/pipelines/parse', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(pipelineData),
       });
 
+      if (!response.ok) {
+        throw new Error('Failed to analyze pipeline');
+      }
+
+      const result = await response.json();
+
       toast({
         title: "Pipeline Analysis",
-        description: `${response.num_nodes} nodes, ${response.num_edges} connections. ${response.is_dag ? 'Valid DAG' : 'Not a valid DAG'}`,
+        description: `${result.num_nodes} nodes, ${result.num_edges} connections. ${result.is_dag ? 'Valid DAG' : 'Not a valid DAG'}`,
       });
     } catch (error) {
       toast({

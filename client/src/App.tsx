@@ -3,6 +3,7 @@ import { PipelineToolbar } from './components/PipelineToolbar';
 import { SubmitButton } from './components/SubmitButton';
 import { PipelineCanvas } from './components/PipelineCanvas';
 import { PipelineActions } from './components/PipelineActions';
+import { NodeDocumentation } from './components/NodeDocumentation';
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
@@ -22,7 +23,10 @@ function App() {
               </div>
               <h1 className="text-xl font-semibold text-slate-800">VectorShift Pipeline Builder</h1>
             </div>
-            <PipelineActions />
+            <div className="flex items-center gap-2">
+              <NodeDocumentation />
+              <PipelineActions />
+            </div>
           </header>
 
           {/* Toolbar */}

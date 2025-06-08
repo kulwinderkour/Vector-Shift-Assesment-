@@ -14,7 +14,18 @@ export const SubmitButton = () => {
 
   const submitMutation = useMutation({
     mutationFn: async (pipelineData: any) => {
-      const response = await apiRequest('POST', '/api/pipelines/parse', pipelineData);
+      const response = await fetch('/api/pipelines/parse', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(pipelineData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to analyze pipeline');
+      }
+
       return response.json();
     },
     onSuccess: (data) => {
