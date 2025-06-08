@@ -1,0 +1,997 @@
+Project Background:
+
+I’m working on a technical assessment for VectorShift, due by 11:59 PM IST on June 8, 2025. The project involves building a ReactFlow-based pipeline UI with drag-and-drop nodes, styling, backend integration, and additional functionality. The app allows users to drag nodes onto a canvas, connect them, interact with their content (e.g., input fields, dropdowns), save the pipeline to a backend, and potentially load or validate the pipeline. The assessment is divided into four parts:
+
+Part 1: Node Abstraction: Create a ReactFlow canvas where users can drag nine nodes (Input, Text, Output, LLM, Math, API, Condition, Loop, Data) from a toolbar, drop them onto the canvas, connect them via Handles, and interact with their content (e.g., typing in Text node, selecting operations in Math node). Nodes should be styled (200x80px, white background, borders, shadows).
+Part 2: Styling: Style the canvas (gradient background), nodes (hover effects, rounded corners), edges (animated, arrows), toolbar (white background, shadow), and Submit button (blue with hover effect).
+Part 3: Basic Backend Integration: When the “Submit” button is clicked, save the pipeline (nodes and edges) to a backend via an API call. Since no backend endpoint was provided, a mock API call was implemented using axios.
+Part 4: Additional Functionality (Assumed): Add the ability to load a saved pipeline from the backend, validate the pipeline (e.g., ensure nodes are properly connected before submission), and enhance interactivity (e.g., delete nodes, add labels to edges).
+Current State of the Project:
+
+I’ve completed Parts 1 to 3 with the help of an AI. The app is functional:
+
+Part 1: Users can drag nine nodes from a toolbar onto a ReactFlow canvas, connect them, and interact with their content (e.g., Text node has an input field, Math node has a dropdown). Nodes are rendered using a BaseNode.jsx component, configured via nodeConfig.js, and styled via NodeStyles.css. A Zustand store (store.js) manages the nodes and edges.
+Part 2: The canvas has a gradient background, nodes have hover effects and rounded corners, edges are animated with arrows, the toolbar has a white background with a shadow, and the Submit button is styled in blue with a hover effect.
+Part 3: Clicking the “Submit” button sends the pipeline data (nodes and edges) to a mock backend API (http://localhost:3001/api/pipeline) using axios. A mock backend server was set up for testing, logging the pipeline data and returning a success response.
+I need to implement Part 4, fix any remaining issues, and prepare the app for submission by the deadline. This includes creating a screen recording and zipping the project.
+
+Project Directory Structure:
+
+The project is located at E:\vecto-shift-assessments\frontend\. The current structure is:
+
+text
+
+Collapse
+
+Wrap
+
+Copy
+E:\vecto-shift-assessments\frontend\
+├── src\
+│   ├── nodes\
+│   │   ├── BaseNode.jsx
+│   │   ├── NodeStyles.css
+│   │   ├── nodeConfig.js
+│   ├── App.js
+│   ├── index.js
+│   ├── index.css
+│   ├── draggableNode.js
+│   ├── ui.js
+│   ├── store.js
+│   ├── toolbar.js
+│   ├── submit.js
+│   ├── reportWebVitals.js
+├── public\
+│   ├── index.html
+│   ├── manifest.json
+├── package.json
+File Contents (Parts 1 to 3):
+
+Here are the key files with their current content after completing Parts 1 to 3:
+
+package.json:
+json
+
+Collapse
+
+Wrap
+
+Copy
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "axios": "^1.6.7",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "reactflow": "^11.10.1",
+    "react-scripts": "5.0.1",
+    "zustand": "^4.5.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
+App.js (src/App.js):
+javascript
+
+Collapse
+
+Wrap
+
+Run
+
+Copy
+import { PipelineToolbar } from './toolbar';
+import { PipelineUI } from './ui';
+import { SubmitButton } from './submit';
+
+function App() {
+  return (
+    <div>
+      <PipelineToolbar />
+      <PipelineUI />
+      <SubmitButton />
+    </div>
+  );
+}
+
+export default App;
+index.js (src/index.js):
+javascript
+
+Collapse
+
+Wrap
+
+Run
+
+Copy
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+draggableNode.js (src/draggableNode.js):
+javascript
+
+Collapse
+
+Wrap
+
+Run
+
+Copy
+export const DraggableNode = ({ type, label }) => {
+    const onDragStart = (event, nodeType) => {
+        const appData = { nodeType };
+        event.target.style.cursor = 'grabbing';
+        event.dataTransfer.setData('application/reactflow', JSON.stringify(appData));
+        event.dataTransfer.effectAllowed = 'move';
+    };
+
+    return (
+        <div
+            className={type}
+            onDragStart={(event) => onDragStart(event, type)}
+            onDragEnd={(event) => (event.target.style.cursor = 'grab')}
+            style={{
+                cursor: 'grab',
+                minWidth: '80px',
+                height: '60px',
+                display: 'flex',
+                alignItems: 'center',
+                borderRadius: '8px',
+                backgroundColor: '#1C2536',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                color: '#fff',
+                transition: 'transform 0.2s, background-color 0.2s',
+            }}
+            draggable
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#2D3748')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#1C2536')}
+        >
+            <span style={{ color: '#fff', fontSize: '14px' }}>{label}</span>
+        </div>
+    );
+};
+ui.js (src/ui.js):
+javascript
+
+Collapse
+
+Wrap
+
+Run
+
+Copy
+import { useState, useRef, useCallback } from 'react';
+import ReactFlow, { Controls, Background, MiniMap } from 'reactflow';
+import { useStore } from './store';
+import { shallow } from 'zustand/shallow';
+import BaseNode from './nodes/BaseNode';
+import 'reactflow/dist/style.css';
+
+const gridSize = 20;
+const proOptions = { hideAttribution: true };
+
+const nodeTypes = {
+    input: BaseNode,
+    text: BaseNode,
+    output: BaseNode,
+    llm: BaseNode,
+    math: BaseNode,
+    api: BaseNode,
+    condition: BaseNode,
+    loop: BaseNode,
+    data: BaseNode,
+};
+
+const selector = (state) => ({
+    nodes: state.nodes,
+    edges: state.edges,
+    getNodeID: state.getNodeID,
+    addNode: state.addNode,
+    onNodesChange: state.onNodesChange,
+    onEdgesChange: state.onEdgesChange,
+    onConnect: state.onConnect,
+});
+
+export const PipelineUI = () => {
+    const reactFlowWrapper = useRef(null);
+    const [reactFlowInstance, setReactFlowInstance] = useState(null);
+    const {
+        nodes,
+        edges,
+        getNodeID,
+        addNode,
+        onNodesChange,
+        onEdgesChange,
+        onConnect
+    } = useStore(selector, shallow);
+
+    const getInitNodeData = (nodeID, type) => {
+        let nodeData = { id: nodeID, nodeType: `${type}` };
+        return nodeData;
+    };
+
+    const onDrop = useCallback(
+        (event) => {
+            event.preventDefault();
+            const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
+            if (event?.dataTransfer?.getData('application/reactflow')) {
+                const appData = JSON.parse(event.dataTransfer.getData('application/reactflow'));
+                const type = appData?.nodeType;
+
+                if (typeof type === 'undefined' || !type) {
+                    return;
+                }
+
+                const position = reactFlowInstance.project({
+                    x: event.clientX - reactFlowBounds.left,
+                    y: event.clientY - reactFlowBounds.top,
+                });
+
+                const nodeID = getNodeID(type);
+                const newNode = {
+                    id: nodeID,
+                    type,
+                    position,
+                    data: getInitNodeData(nodeID, type),
+                };
+
+                addNode(newNode);
+            }
+        },
+        [reactFlowInstance]
+    );
+
+    const onDragOver = useCallback((event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+    }, []);
+
+    return (
+        <>
+            <div ref={reactFlowWrapper} style={{ width: '100vw', height: '70vh' }}>
+                <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    onDrop={onDrop}
+                    onDragOver={onDragOver}
+                    onInit={setReactFlowInstance}
+                    nodeTypes={nodeTypes}
+                    proOptions={proOptions}
+                    snapGrid={[gridSize, gridSize]}
+                    connectionLineType='smoothstep'
+                >
+                    <Background color="#aaa" gap={gridSize} />
+                    <Controls />
+                    <MiniMap />
+                </ReactFlow>
+            </div>
+        </>
+    );
+};
+store.js (src/store.js):
+javascript
+
+Collapse
+
+Wrap
+
+Run
+
+Copy
+import { create } from "zustand";
+import {
+    addEdge,
+    applyNodeChanges,
+    applyEdgeChanges,
+    MarkerType,
+} from 'reactflow';
+import { nodeTypesConfig } from './nodes/nodeConfig';
+
+export const useStore = create((set, get) => ({
+    nodes: [],
+    edges: [],
+    nodeIDs: {},
+    getNodeID: (type) => {
+        const newIDs = { ...get().nodeIDs };
+        if (newIDs[type] === undefined) {
+            newIDs[type] = 0;
+        }
+        newIDs[type] += 1;
+        set({ nodeIDs: newIDs });
+        return `${type}-${newIDs[type]}`;
+    },
+    addNode: (node) => {
+        const type = node.type;
+        const config = nodeTypesConfig[type] || {};
+        const nodeData = {
+            ...node.data,
+            title: config.title || type,
+            inputs: config.inputs || [],
+            outputs: config.outputs || [],
+            content: config.content || (() => <span>{type}</span>),
+        };
+        set({
+            nodes: [...get().nodes, { ...node, data: nodeData }],
+        });
+    },
+    onNodesChange: (changes) => {
+        set({
+            nodes: applyNodeChanges(changes, get().nodes),
+        });
+    },
+    onEdgesChange: (changes) => {
+        set({
+            edges: applyEdgeChanges(changes, get().edges),
+        });
+    },
+    onConnect: (connection) => {
+        set({
+            edges: addEdge(
+                {
+                    ...connection,
+                    type: 'smoothstep',
+                    animated: true,
+                    markerEnd: { type: MarkerType.Arrow, height: '20px', width: '20px' },
+                },
+                get().edges
+            ),
+        });
+    },
+    updateNodeField: (nodeId, fieldName, fieldValue) => {
+        set({
+            nodes: get().nodes.map((node) => {
+                if (node.id === nodeId) {
+                    node.data = { ...node.data, [fieldName]: fieldValue };
+                }
+                return node;
+            }),
+        });
+    },
+}));
+toolbar.js (src/toolbar.js):
+javascript
+
+Collapse
+
+Wrap
+
+Run
+
+Copy
+import { DraggableNode } from './draggableNode';
+
+export const PipelineToolbar = () => {
+    return (
+        <div style={{
+            padding: '10px',
+            backgroundColor: '#ffffff',
+            borderBottom: '1px solid #d1d5db',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+        }}>
+            <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                <DraggableNode type="input" label="Input" />
+                <DraggableNode type="text" label="Text" />
+                <DraggableNode type="output" label="Output" />
+                <DraggableNode type="llm" label="LLM" />
+                <DraggableNode type="math" label="Math" />
+                <DraggableNode type="api" label="API" />
+                <DraggableNode type="condition" label="Condition" />
+                <DraggableNode type="loop" label="Loop" />
+                <DraggableNode type="data" label="Data" />
+            </div>
+        </div>
+    );
+};
+submit.js (src/submit.js):
+javascript
+
+Collapse
+
+Wrap
+
+Run
+
+Copy
+import axios from 'axios';
+import { useStore } from './store';
+
+export const SubmitButton = () => {
+    const { nodes, edges } = useStore((state) => ({
+        nodes: state.nodes,
+        edges: state.edges,
+    }));
+
+    const handleSubmit = async () => {
+        const pipelineData = { nodes, edges };
+        try {
+            const response = await axios.post('http://localhost:3001/api/pipeline', pipelineData);
+            console.log('Pipeline saved:', response.data);
+            alert('Pipeline saved successfully!');
+        } catch (error) {
+            console.error('Error saving pipeline:', error);
+            alert('Failed to save pipeline.');
+        }
+    };
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px' }}>
+            <button
+                type="submit"
+                onClick={handleSubmit}
+                style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#3b82f6',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#2563eb')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#3b82f6')}
+            >
+                Submit
+            </button>
+        </div>
+    );
+};
+BaseNode.jsx (src/nodes/BaseNode.jsx):
+jsx
+
+Collapse
+
+Wrap
+
+Copy
+import { Handle, Position } from 'reactflow';
+import './NodeStyles.css';
+
+function BaseNode({ id, data }) {
+    const { title, inputs = [], outputs = [], content } = data;
+
+    return (
+        <div className="node">
+            <div className="node-title">
+                <span>{title}</span>
+            </div>
+            <div className="node-content">
+                {typeof content === 'function' ? content({ id, data }) : content}
+            </div>
+            {inputs.map((input, index) => (
+                <Handle
+                    key={input.id}
+                    type="target"
+                    position={Position.Left}
+                    id={`${id}-${input.id}`}
+                    style={{ top: `${(index + 1) * 100 / (inputs.length + 1)}%` }}
+                />
+            ))}
+            {outputs.map((output, index) => (
+                <Handle
+                    key={output.id}
+                    type="source"
+                    position={Position.Right}
+                    id={`${id}-${output.id}`}
+                    style={{ top: `${(index + 1) * 100 / (outputs.length + 1)}%` }}
+                />
+            ))}
+        </div>
+    );
+}
+
+export default BaseNode;
+NodeStyles.css (src/nodes/NodeStyles.css):
+css
+
+Collapse
+
+Wrap
+
+Copy
+.node {
+    width: 200px;
+    height: 80px;
+    border: 1px solid #4b5563;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.node:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.node-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #1f2937;
+}
+
+.node-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.node-content label {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    color: #374151;
+}
+
+.node-content input,
+.node-content select,
+.node-content textarea {
+    margin-top: 2px;
+    padding: 4px;
+    font-size: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.node-content input:focus,
+.node-content select:focus,
+.node-content textarea:focus {
+    border-color: #3b82f6;
+}
+nodeConfig.js (src/nodes/nodeConfig.js):
+javascript
+
+Collapse
+
+Wrap
+
+Run
+
+Copy
+import { useState } from 'react';
+
+function InputContent({ id, data }) {
+    const [currName, setCurrName] = useState(data?.inputName || id.replace('customInput-', 'input_'));
+    const [inputType, setInputType] = useState(data?.inputType || 'Text');
+
+    return (
+        <div>
+            <label>
+                Name:
+                <input
+                    type="text"
+                    value={currName}
+                    onChange={(e) => setCurrName(e.target.value)}
+                />
+            </label>
+            <label>
+                Type:
+                <select value={inputType} onChange={(e) => setInputType(e.target.value)}>
+                    <option value="Text">Text</option>
+                    <option value="File">File</option>
+                </select>
+            </label>
+        </div>
+    );
+}
+
+function TextContent({ id, data }) {
+    const [currText, setCurrText] = useState(data?.text || '{{input}}');
+
+    return (
+        <div>
+            <label>
+                Text:
+                <input
+                    type="text"
+                    value={currText}
+                    onChange={(e) => setCurrText(e.target.value)}
+                />
+            </label>
+        </div>
+    );
+}
+
+function OutputContent({ id, data }) {
+    const [currName, setCurrName] = useState(data?.outputName || id.replace('customOutput-', 'output_'));
+    const [outputType, setOutputType] = useState(data?.outputType || 'Text');
+
+    return (
+        <div>
+            <label>
+                Name:
+                <input
+                    type="text"
+                    value={currName}
+                    onChange={(e) => setCurrName(e.target.value)}
+                />
+            </label>
+            <label>
+                Type:
+                <select value={outputType} onChange={(e) => setOutputType(e.target.value)}>
+                    <option value="Text">Text</option>
+                    <option value="Image">Image</option>
+                </select>
+            </label>
+        </div>
+    );
+}
+
+function LLMContent() {
+    return (
+        <div>
+            <span>This is a LLM.</span>
+        </div>
+    );
+}
+
+function MathContent({ id, data }) {
+    const [operation, setOperation] = useState(data?.operation || 'Add');
+
+    return (
+        <div>
+            <label>
+                Operation:
+                <select value={operation} onChange={(e) => setOperation(e.target.value)}>
+                    <option value="Add">Add</option>
+                    <option value="Subtract">Subtract</option>
+                    <option value="Multiply">Multiply</option>
+                </select>
+            </label>
+        </div>
+    );
+}
+
+function APIContent({ id, data }) {
+    const [url, setUrl] = useState(data?.url || '');
+
+    return (
+        <div>
+            <label>
+                API URL:
+                <input
+                    type="text"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="Enter API URL"
+                />
+            </label>
+        </div>
+    );
+}
+
+function ConditionContent({ id, data }) {
+    const [condition, setCondition] = useState(data?.condition || '');
+
+    return (
+        <div>
+            <label>
+                Condition:
+                <input
+                    type="text"
+                    value={condition}
+                    onChange={(e) => setCondition(e.target.value)}
+                    placeholder="Enter condition"
+                />
+            </label>
+        </div>
+    );
+}
+
+function LoopContent({ id, data }) {
+    const [iterations, setIterations] = useState(data?.iterations || 1);
+
+    return (
+        <div>
+            <label>
+                Iterations:
+                <input
+                    type="number"
+                    value={iterations}
+                    onChange={(e) => setIterations(e.target.value)}
+                    min="1"
+                />
+            </label>
+        </div>
+    );
+}
+
+function DataContent({ id, data }) {
+    const [dataValue, setDataValue] = useState(data?.dataValue || '');
+
+    return (
+        <div>
+            <label>
+                Data:
+                <textarea
+                    value={dataValue}
+                    onChange={(e) => setDataValue(e.target.value)}
+                    placeholder="Store data"
+                />
+            </label>
+        </div>
+    );
+}
+
+export const nodeTypesConfig = {
+    input: {
+        title: 'Input',
+        inputs: [],
+        outputs: [{ id: 'value' }],
+        content: InputContent,
+    },
+    text: {
+        title: 'Text',
+        inputs: [],
+        outputs: [{ id: 'output' }],
+        content: TextContent,
+    },
+    output: {
+        title: 'Output',
+        inputs: [{ id: 'value' }],
+        outputs: [],
+        content: OutputContent,
+    },
+    llm: {
+        title: 'LLM',
+        inputs: [{ id: 'system' }, { id: 'prompt' }],
+        outputs: [{ id: 'response' }],
+        content: LLMContent,
+    },
+    math: {
+        title: 'Math',
+        inputs: [{ id: 'in1' }, { id: 'in2' }],
+        outputs: [{ id: 'result' }],
+        content: MathContent,
+    },
+    api: {
+        title: 'API',
+        inputs: [{ id: 'input' }],
+        outputs: [{ id: 'output' }],
+        content: APIContent,
+    },
+    condition: {
+        title: 'Condition',
+        inputs: [{ id: 'input' }],
+        outputs: [{ id: 'true' }, { id: 'false' }],
+        content: ConditionContent,
+    },
+    loop: {
+        title: 'Loop',
+        inputs: [{ id: 'input' }],
+        outputs: [{ id: 'output' }],
+        content: LoopContent,
+    },
+    data: {
+        title: 'Data',
+        inputs: [{ id: 'input' }],
+        outputs: [{ id: 'output' }],
+        content: DataContent,
+    },
+};
+index.css (src/index.css):
+css
+
+Collapse
+
+Wrap
+
+Copy
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f0f2f5;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+        monospace;
+}
+
+.react-flow__pane {
+    background: linear-gradient(135deg, #e0e7ff, #c3dafe);
+}
+
+.react-flow__edge-path {
+    stroke: #4b5563;
+    stroke-width: 2;
+}
+
+.react-flow__edge.animated {
+    stroke-dasharray: 5;
+    animation: dash 1.5s linear infinite;
+}
+
+@keyframes dash {
+    to {
+        stroke-dashoffset: -10;
+    }
+}
+manifest.json (public/manifest.json):
+json
+
+Collapse
+
+Wrap
+
+Copy
+{
+    "short_name": "React App",
+    "name": "Create React App Sample",
+    "icons": [
+        {
+            "src": "favicon.ico",
+            "sizes": "64x64 32x32 24x24 16x16",
+            "type": "image/x-icon"
+        },
+        {
+            "src": "logo192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "logo512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#000000",
+    "background_color": "#ffffff"
+}
+Mock Backend (Optional) (E:\vecto-shift-assessments\backend\server.js):
+javascript
+
+Collapse
+
+Wrap
+
+Run
+
+Copy
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.post('/api/pipeline', (req, res) => {
+    const pipelineData = req.body;
+    console.log('Received pipeline:', pipelineData);
+    res.status(200).json({ message: 'Pipeline saved successfully', data: pipelineData });
+});
+
+app.listen(3001, () => {
+    console.log('Backend server running on http://localhost:3001');
+});
+Issues Faced and Solutions Applied (Parts 1 to 3):
+
+Directory Error:
+Issue: Running npm start in E:\vecto-shift-assessments resulted in ENOENT: no such file or directory, open 'E:\vecto-shift-assessments\package.json'.
+Solution: Changed directory to E:\vecto-shift-assessments\frontend where package.json exists and ran npm start.
+Git Line Ending Warnings:
+Issue: git add . showed warnings like LF will be replaced by CRLF for multiple files.
+Solution: Ignored as harmless; added .gitattributes with * text=auto to normalize line endings.
+Previous Errors (Before Using Company Files):
+SyntaxError in package.json: Fixed by ensuring proper JSON syntax.
+Module not found (./NodeStyles.css, ./App): Corrected import paths and added .js extensions due to "type": "module".
+ESLint Hooks Error in nodeConfig.js: Moved useState into proper React components.
+Unused setNodes Warning: Used setNodes in onNodesChange for dragging nodes.
+Integration of Company Files:
+Issue: Company files (draggableNode.js, ui.js, store.js, toolbar.js) used a different node structure (inputNode.js, etc.), but we unified all nodes under BaseNode.jsx.
+Solution: Deleted redundant node files (inputNode.js, llmNode.js, outputNode.js, textNode.js) and updated ui.js to use BaseNode for all node types.
+Requirements for Part 4: Additional Functionality
+
+For Part 4, I need to add the following features to enhance the app:
+
+Load Pipeline: Add a “Load” button to fetch a saved pipeline (nodes and edges) from the backend and render it on the canvas. Use a mock GET API (http://localhost:3001/api/pipeline) to retrieve the pipeline data.
+Pipeline Validation: Before submitting the pipeline, validate it:
+Ensure there is at least one Input and one Output node.
+Ensure all nodes have at least one incoming or outgoing connection (except Input nodes, which can have only outputs, and Output nodes, which can have only inputs).
+Show an alert if validation fails.
+Enhanced Interactivity:
+Allow users to delete nodes by selecting them and pressing the “Delete” key or clicking a delete button on the node.
+Add labels to edges (e.g., display the edge ID or a custom label).
+Tasks for the Next AI:
+
+Implement Part 4:
+Add a “Load” button in submit.js (or a new component) to fetch and render a saved pipeline. Update the mock backend to support a GET /api/pipeline endpoint.
+Add pipeline validation in submit.js before the API call.
+Enable node deletion and edge labels in ui.js and BaseNode.jsx.
+Test the App:
+Run npm start in E:\vecto-shift-assessments\frontend.
+Test dragging nodes, connecting them, interacting with content, saving, loading, validating, and deleting nodes.
+Check for errors in the terminal and browser console (F12 → Console).
+Prepare for Submission:
+Zip the Project:
+bash
+
+Collapse
+
+Wrap
+
+Run
+
+Copy
+cd E:\vecto-shift-assessments
+zip -r Abhishek_Swami_technical_assessment.zip frontend
+Screen Recording: Record a video showing:
+Dragging all nine nodes onto the canvas.
+Connecting nodes (e.g., Input → Text → Output).
+Interacting with node content (e.g., typing in Text, changing Math dropdown).
+Deleting a node.
+Adding an edge label.
+Saving the pipeline (clicking Submit).
+Loading the pipeline (clicking Load).
+Validating the pipeline (e.g., trying to submit an invalid pipeline).
+Save as Abhishek_Swami_screenrecording.mp4.
+Submit: Upload the zip and video via the Google Form by 11:59 PM IST, June 8, 2025.
+Fix Any Issues: If errors occur during testing, provide the error logs and fix them before submission.
+Additional Notes:
+
+The mock backend (E:\vecto-shift-assessments\backend\server.js) should be updated to support GET requests for loading the pipeline.
+Ensure all dependencies are installed (npm install in frontend).
+The app should be fully functional and visually polished for submission.
+Time is critical; the submission deadline is approaching.
+Guidance for Part 4 Implementation
+To help the next AI, here’s a quick outline for Part 4:
+
+Load Pipeline:
+Add a “Load” button in submit.js.
+Use axios.get('http://localhost:3001/api/pipeline') to fetch the pipeline.
+Update the Zustand store to set nodes and edges with the fetched data.
+Update the mock backend to store the pipeline in memory and return it on GET requests.
+Pipeline Validation:
+In submit.js, before the axios.post, check:
+Count Input and Output nodes.
+For each node, verify connections using edges.
+Show an alert if validation fails and prevent submission.
+Enhanced Interactivity:
+Node Deletion: Add onNodeClick in ui.js to select a node, and use onNodesDelete to handle deletion. Add a delete button in BaseNode.jsx.
+Edge Labels: Modify onConnect in store.js to add a label property to edges (e.g., connection.id).
