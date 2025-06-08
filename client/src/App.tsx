@@ -2,6 +2,7 @@ import { ReactFlowProvider } from 'reactflow';
 import { PipelineToolbar } from './components/PipelineToolbar';
 import { SubmitButton } from './components/SubmitButton';
 import { PipelineCanvas } from './components/PipelineCanvas';
+import { PipelineActions } from './components/PipelineActions';
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
@@ -21,20 +22,7 @@ function App() {
               </div>
               <h1 className="text-xl font-semibold text-slate-800">VectorShift Pipeline Builder</h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <button className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 transition-colors">
-                <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                Save Draft
-              </button>
-              <button className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 transition-colors">
-                <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z" />
-                </svg>
-                Load Pipeline
-              </button>
-            </div>
+            <PipelineActions />
           </header>
 
           {/* Toolbar */}

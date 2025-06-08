@@ -17,6 +17,9 @@ interface StoreState {
   onNodesChange: (changes: NodeChange[]) => void;
   onEdgesChange: (changes: EdgeChange[]) => void;
   updateNodeField: (nodeId: string, fieldName: string, fieldValue: any) => void;
+  deleteNode: (nodeId: string) => void;
+  clearWorkflow: () => void;
+  loadPipeline: (nodes: Node[], edges: Edge[]) => void;
 }
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -60,6 +63,28 @@ export const useStore = create<StoreState>((set, get) => ({
         }
         return node;
       }),
+    });
+  },
+
+  deleteNode: (nodeId: string) => {
+    set({
+      nodes: get().nodes.filter((node) => node.id !== nodeId),
+      edges: get().edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId),
+    });
+  },
+
+  clearWorkflow: () => {
+    set({
+      nodes: [],
+      edges: [],
+      nodeIDs: {},
+    });
+  },
+
+  loadPipeline: (nodes: Node[], edges: Edge[]) => {
+    set({
+      nodes,
+      edges,
     });
   },
 }));

@@ -1,5 +1,7 @@
 import { memo, ReactNode } from 'react';
 import { Handle, Position } from 'reactflow';
+import { useStore } from '../store/useStore';
+import { X } from 'lucide-react';
 
 export interface BaseNodeProps {
   id: string;
@@ -30,11 +32,27 @@ interface BaseNodeComponentProps extends BaseNodeProps {
 }
 
 export const BaseNode = memo(({ id, data, config, children, height = 80, width = 200 }: BaseNodeComponentProps) => {
+  const { deleteNode } = useStore();
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteNode(id);
+  };
+
   return (
     <div 
-      className="bg-white rounded-lg border border-slate-200 p-3 relative"
+      className="bg-white rounded-lg border border-slate-200 p-3 relative group hover:shadow-lg transition-shadow"
       style={{ width: `${width}px`, height: `${height}px` }}
     >
+      {/* Delete Button */}
+      <button
+        onClick={handleDelete}
+        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+        style={{ width: '20px', height: '20px' }}
+      >
+        <X size={12} />
+      </button>
+
       {/* Input Handles */}
       {config.inputs?.map((input, index) => (
         <Handle
