@@ -33,6 +33,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all pipelines
+  app.get("/api/pipelines", async (req, res) => {
+    try {
+      const userId = parseInt(req.query.userId as string);
+      if (userId) {
+        const pipelines = await storage.getPipelinesByUser(userId);
+        res.json(pipelines);
+      } else {
+        res.status(400).json({ message: "userId query parameter is required" });
+      }
+    } catch (error) {
+      console.error("Get pipelines error:", error);
+      res.status(500).json({ message: "Failed to retrieve pipelines" });
+    }
+  });
+
+  // Get specific pipeline
+  app.get("/api/pipelines/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const pipeline = await storage.getPipeline(id);
+      
+      if (pipeline) {
+        res.json(pipeline);
+      } else {
+        res.status(404).json({ message: "Pipeline not found" });
+      }
+    } catch (error) {
+      console.error("Get pipeline error:", error);
+      res.status(500).json({ message: "Failed to retrieve pipeline" });
+    }
+  });
+
+  // Create new pipeline
+  app.post("/api/pipelines", async (req, res) => {
+    try {
+      const pipelineData = insertPipelineSchema.parse(req.body);
+      const pipeline = await storage.createPipeline(pipelineData);
+      res.status(201).json(pipeline);
+    } catch (error) {
+      console.error("Create pipeline error:", error);
+      res.status(400).json({ 
+        message: "Invalid pipeline data",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update pipeline
+  app.put("/api/pipelines/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const pipelineData = insertPipelineSchema.partial().parse(req.body);
+      const pipeline = await storage.updatePipeline(id, pipelineData);
+      
+      if (pipeline) {
+        res.json(pipeline);
+      } else {
+        res.status(404).json({ message: "Pipeline not found" });
+      }
+    } catch (error) {
+      console.error("Update pipeline error:", error);
+      res.status(400).json({ 
+        message: "Invalid pipeline data",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Delete pipeline
+  app.delete("/api/pipelines/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deletePipeline(id);
+      
+      if (deleted) {
+        res.status(204).send();
+      } else {
+        res.status(404).json({ message: "Pipeline not found" });
+      }
+    } catch (error) {
+      console.error("Delete pipeline error:", error);
+      res.status(500).json({ message: "Failed to delete pipeline" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
